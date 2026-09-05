@@ -158,3 +158,32 @@ the AI's response, and any follow-up corrections.)_
     corrected.
 - **Open items for next SDD installment:** START state definition,
   `Model()` mock behavior, tool-execution trigger and logic.
+
+### Entry 4 — START State
+
+- **Date:** 2026-09-05
+- **Prompt (from student), verbatim:**
+
+  ```
+  In the start state, it should wait to be prompted. Once someone types into
+  the chat it should then execute. It should be an empty field for the user
+  to type in then it stays in running until exited.
+  ```
+
+- **Derived architectural rules:**
+  - `START` state: print the prompt (`> `) with an empty input field and
+    block on `fgets` — no processing happens until the user actually types
+    something and presses enter.
+  - The first line of input received is what triggers execution: it flows
+    straight into the RUNNING-state logic already specified (exit check →
+    `Storage_Context`/`Model` dispatch, per Entry 2). There is no separate
+    "waiting" busy-loop — the blocking `fgets` call itself is the wait.
+  - After that first input is processed, the program remains in the
+    RUNNING state, re-prompting and re-reading on each iteration, until
+    the `exit` keyword is entered (→ EXIT state, per Entry 2).
+  - In effect, `START` is just the first pass through the same
+    prompt/read/process loop as `RUNNING` — no distinct banner or extra
+    initialization beyond `Storage_Idx = 0` and printing the first `> `
+    prompt.
+- **Open items for next SDD installment:** `Model()` mock behavior,
+  tool-execution trigger and logic.
