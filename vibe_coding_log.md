@@ -358,3 +358,21 @@ the AI's response, and any follow-up corrections.)_
     passed, and valgrind reports zero leaks (expected, since `Storage` is
     static/global with no heap allocation anywhere in the program).
   - Updated `README.md` with a features summary and testing instructions.
+
+### Entry 9 — Authorship Correction and Design Notes
+
+- **Date:** 2026-09-05
+- **Prompt (from student):** Asked to be made the lead contributor on the
+  GitHub repo (commits so far were authored as "Claude
+  <noreply@anthropic.com>"), and to add their own SDD design-notes
+  document (`docs/sdd_notes.pdf`) to the repo for their professor.
+- **Action taken:**
+  - Set the local git identity to the student (`sgshimberg
+    <Distorex1@gmail.com>`) and rewrote every existing commit's
+    author/committer to match, preserving each commit's message
+    (including the `Co-Authored-By: Claude` trailer) and force-pushing
+    the rewritten history.
+  - Added `docs/sdd_notes.pdf` — the student's original written SDD
+    notes (state machine, context management, and calculator tool spec)
+    that were fed to the AI assistant piece-by-piece across Entries 2-7.
+    Referenced it from `README.md`.

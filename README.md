@@ -13,6 +13,8 @@ Driven Development (SDD) / "vibe coding" per the ECE 309 Project 1 spec.
   used to generate the C code (required deliverable per spec).
 - `chats/` — full running transcript of the chat sessions used to build this
   project, saved as we go.
+- `docs/sdd_notes.pdf` — the original SDD design notes (state machine,
+  context management, and calculator tool spec) written up ahead of time.
 
 ## Requirements
 
