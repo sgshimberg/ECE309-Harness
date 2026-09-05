@@ -44,3 +44,49 @@ the AI's response, and any follow-up corrections.)_
   directions to follow incrementally.
 - **Action taken:** Created `README.md`, `vibe_coding_log.md`, and
   `chats/session_2026-09-05.md` to track the SDD process going forward.
+
+### Entry 2 — State Machine: RUNNING and EXIT States
+
+- **Date:** 2026-09-05
+- **Prompt (from student), verbatim:**
+
+  ```
+  State Running
+
+  * Prompt user (">")
+  * We only want to use the C Standard Library. Use fgets [fgets(buffer,256,stdin)]
+  * We always want to strip the newline character.
+  * We check for the keyword "exit" FIRST, before we store anything.
+     * Use strcmp(buffer, "exit") == 0; We will go to STATE: Exit;
+     * Do NOT pass this buffer to Storage_Context(). We don't want "exit" sitting in our history.
+  * If it's not "exit":
+     * Pass buffer to Storage_Context(buffer, USER);
+     * Store user message into Storage[Storage_Idx][256]
+     * We will pass the buffer to the function Model().
+     * Store model response into Storage via Storage_Context(response, MODEL);
+     * Print the model function output and stay in the running state.
+
+  State Exit:
+
+  * Our Storage array is static/global, not malloc'd — so we don't actually free() anything here, we just clear it out.
+  * Change context management state to END State.
+  * Print "Goodbye."
+  * Exit(0)
+  ```
+
+- **Derived architectural rules:**
+  - `buffer` is `char[256]`, populated via `fgets(buffer, 256, stdin)`.
+  - Newline stripping is mandatory immediately after every `fgets` call.
+  - The `exit` keyword check (`strcmp(buffer, "exit") == 0`) happens
+    *before* any call to `Storage_Context`, so "exit" never enters history.
+  - Non-exit turns: `Storage_Context(buffer, USER)` →
+    `Model(buffer)` → `Storage_Context(response, MODEL)` → print
+    response → remain in RUNNING state.
+  - `Storage` is a **static/global** array shaped `Storage[][256]` indexed
+    by `Storage_Idx` (no heap allocation — no `malloc`/`free`).
+  - EXIT state: clear `Storage` in place (no `free()`), transition context
+    state to `END`, print `Goodbye.`, call `exit(0)`.
+- **Open items for next SDD installment:** START state definition,
+  `Storage` array dimensions / `Storage_Idx` wraparound policy for
+  "last 5 turns", `Model()` mock behavior, tool-execution trigger and
+  logic.
