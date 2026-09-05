@@ -22,7 +22,37 @@ Driven Development (SDD) / "vibe coding" per the ECE 309 Project 1 spec.
 - Run: `./harness`
 - Test: `bash test.sh`
 
+## Features
+
+- **Core loop:** prompts with `> `, reads a line via `fgets`, strips the
+  newline, and checks for `exit` before anything else is stored.
+- **Context management:** a static `Storage[10][256]` array (no heap
+  allocation) holds the last 5 turns (user + model message each). Once
+  full, a FIFO `CONTEXT_WINDOW` shift drops the oldest entry to make room.
+- **Mock model:** any variation of "hello" gets a hardcoded greeting;
+  everything else is echoed back — unless the calculator tool triggers.
+- **Calculator tool:** typing `calculate NUM OP NUM` (e.g. `calculate 2 + 2`)
+  runs addition, subtraction, multiplication, or division. Operators accept
+  symbols (`+ - * /`) or word synonyms (`add`/`plus`/`sum`,
+  `subtract`/`minus`/`less`, `multiply`/`times`/`product`,
+  `divide`/`divided by`/`over`). Division by zero is caught and reported as
+  an error instead of crashing.
+- **Safe shutdown:** typing `exit` clears the context history and prints
+  `Goodbye.` before terminating.
+
+## Testing
+
+`test.sh` rebuilds the harness, pipes deterministic input through it, and
+asserts on the output for the core loop, every calculator operation and
+synonym, divide-by-zero, malformed input, and context-window behavior past
+5 turns. If `valgrind` is installed, it also runs a full leak-check pass.
+
+```
+bash test.sh
+```
+
 ## Status
 
-Project scaffolding in progress. See `vibe_coding_log.md` for the SDD process
-and `chats/` for the full conversation history.
+Functionally complete per the current SDD spec. See `vibe_coding_log.md` for
+the full SDD process and prompt history, and `chats/` for the full
+conversation transcript.
