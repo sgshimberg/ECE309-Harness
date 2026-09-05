@@ -187,3 +187,25 @@ the AI's response, and any follow-up corrections.)_
     prompt.
 - **Open items for next SDD installment:** `Model()` mock behavior,
   tool-execution trigger and logic.
+
+### Entry 5 — Header Constraint Confirmed: `<stdio.h>` and `<string.h>` Only
+
+- **Date:** 2026-09-05
+- **Prompt (from student), verbatim:** "For reference you are only using
+  Stdio.h and String.h?" → followed by "keep it." in response to being
+  offered a choice between (1) also allowing `<stdlib.h>` for `exit()`/
+  number parsing, or (2) strictly limiting to `<stdio.h>` and
+  `<string.h>` only.
+- **Decision:** Strict — **only** `<stdio.h>` and `<string.h>` may be
+  `#include`d. No `<stdlib.h>`, `<ctype.h>`, etc.
+- **Consequences for implementation:**
+  - The EXIT state's `Exit(0)` (Entry 1) will be implemented as falling
+    out of the main loop and `return 0;` from `main()` (equivalent
+    process-exit behavior) rather than calling the `<stdlib.h>` `exit()`
+    function, since `exit()` is not declared by `<stdio.h>`/`<string.h>`.
+  - The math tool-execution spec (once provided) will need to parse
+    numeric text manually via direct character comparisons
+    (`c >= '0' && c <= '9'`, etc.) rather than `atoi`/`atof`/`strtol`
+    (`<stdlib.h>`) or `isdigit` (`<ctype.h>`).
+- **Open items for next SDD installment:** `Model()` mock behavior,
+  tool-execution trigger and logic.
