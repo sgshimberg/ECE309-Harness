@@ -90,3 +90,71 @@ the AI's response, and any follow-up corrections.)_
   `Storage` array dimensions / `Storage_Idx` wraparound policy for
   "last 5 turns", `Model()` mock behavior, tool-execution trigger and
   logic.
+
+### Entry 3 — Context Management: Storage, CONTEXT_WINDOW, and END States
+
+- **Date:** 2026-09-05
+- **Prompt (from student), verbatim:**
+
+  ```
+  Context Management.
+
+  * To keep memory free we must limit ourselves to the last 5 turns.
+  * Storage[10][256]; — 10 slots since 5 turns = 10 messages (1 user + 1 model per turn).
+  * Storage_Idx starts at 0 and increments upward toward 10 on every single write.
+  * Storage_Agent_Idx is no longer the same thing as Storage_Idx — it tags WHO wrote the message (USER or MODEL) so we know whose turn it was.
+
+  Storage_Context(buffer, Storage_Agent_Idx):
+
+  * If Storage_Idx = 10, we run the CONTEXT_WINDOW shift BEFORE we write anything new.
+  * Write buffer into Storage[Storage_Idx].
+  * Tag it with Storage_Agent_Idx so we remember who said it.
+  * If Storage_Idx < 10, Storage_Idx++.
+
+  State CONTEXT_WINDOW:
+
+  * Only triggers when Storage_Idx = 10, right before the new write.
+  * Shift all of the strings in Storage up 1 so that context can be loaded at Storage_Idx = 9 and off loaded at Storage_Idx = 0. This follows the FIFO (First In First Out) principle.
+  * Clear Storage[9] with null characters before the new message lands there.
+  * Storage_Idx just stays at 10 from here on — we shift instead of incrementing.
+
+  State END
+
+  * For every Storage_Idx clear the string to start fresh. So clear with null characters.
+  * Set Storage_Idx = 0;
+  ```
+
+- **Derived architectural rules:**
+  - `Storage` is `char Storage[10][256]` (static/global) — 10 message
+    slots = last 5 turns (1 user + 1 model message per turn).
+  - A parallel tag store (`Storage_Agent_Idx` per slot, e.g.
+    `int Storage_Agent[10]` holding `USER`/`MODEL`) records who authored
+    each `Storage[i]` entry — distinct from `Storage_Idx`, which is the
+    write-position counter.
+  - `Storage_Idx` starts at 0, increments by 1 on every write while
+    `Storage_Idx < 10`, and once it reaches 10 it stays at 10 permanently
+    (no further increment — the array is full and now operates as a FIFO
+    via CONTEXT_WINDOW shifting instead of growing).
+  - `Storage_Context(buffer, agent_tag)`:
+    1. If `Storage_Idx == 10`, run the `CONTEXT_WINDOW` shift first.
+    2. Write `buffer` into the current write slot; tag it with
+       `agent_tag`.
+    3. If `Storage_Idx < 10`, `Storage_Idx++`.
+  - `CONTEXT_WINDOW` (triggers only when `Storage_Idx == 10`, right before
+    the new write): shift every entry left by one index (`Storage[i] =
+    Storage[i+1]` for `i` in `0..8`, tags shifted the same way), clear
+    `Storage[9]` (null bytes) so the incoming message lands in a clean
+    slot, and leave `Storage_Idx` at 10 (FIFO from here on — oldest entry
+    at index 0 is dropped, newest always lands at index 9).
+  - `END` state (final cleanup, distinct from the `EXIT` state's
+    "Goodbye."/`exit(0)` behavior): null out every `Storage[i]` string and
+    reset `Storage_Idx = 0`.
+  - **Implementation note for code-gen (to confirm/flag, not yet asked of
+    student):** with `Storage_Idx` capped at 10 but valid array indices
+    only `0..9`, "write into `Storage[Storage_Idx]`" after the shift is
+    read as "write into `Storage[9]`" (the slot just cleared by
+    `CONTEXT_WINDOW`) — i.e. once full, every new message always lands at
+    index 9 after the FIFO shift. Will implement it this way unless
+    corrected.
+- **Open items for next SDD installment:** START state definition,
+  `Model()` mock behavior, tool-execution trigger and logic.
