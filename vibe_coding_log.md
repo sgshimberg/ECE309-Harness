@@ -209,3 +209,29 @@ the AI's response, and any follow-up corrections.)_
     (`<stdlib.h>`) or `isdigit` (`<ctype.h>`).
 - **Open items for next SDD installment:** `Model()` mock behavior,
   tool-execution trigger and logic.
+
+### Entry 6 — `Model()` Mock Behavior & Global Commenting Requirement
+
+- **Date:** 2026-09-05
+- **Prompt (from student), verbatim:** "for the model() of the input
+  includes andy [any] variation of hello then respond back with a
+  greetings. other than that echo back what the user sends back." —
+  (message interrupted by student) — followed by: "Make sure every line
+  has a comment of what it is doing."
+- **Derived architectural rules:**
+  - `Model(buffer)` behavior:
+    - If `buffer` contains **any variation of "hello"** (case-insensitive
+      substring match — e.g. "Hello", "HELLO", "well hello there",
+      "hellooo") → return a hardcoded greeting string.
+    - Otherwise → echo the input back verbatim as the "response".
+  - Since case-insensitive matching is needed and `<ctype.h>`
+    (`tolower`) is off-limits under the Entry 5 header constraint, the
+    substring search will be implemented manually (hand-rolled
+    case-insensitive substring match comparing characters with manual
+    upper/lower-case offset logic, using only `<string.h>`/`<stdio.h>`).
+  - **Global code style requirement:** every line of the generated
+    `harness.c` must carry a comment explaining what that line does
+    (matches the spec's Phase 2 "Vibe" prompt template item 5: "clear,
+    line-by-line comments").
+- **Open items for next SDD installment:** tool-execution trigger and
+  logic (math calculation tool).
